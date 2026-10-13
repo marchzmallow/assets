@@ -1,0 +1,20 @@
+{
+    "name": "Lumora",
+    "website": "https://lumoraplatform.xyz",
+    "description": "Lumora (LUM) is a BEP-20 token deployed on BNB Smart Chain for the Lumora project. Proposed uses within Lumora digital services remain subject to separate governance, legal, security, and operational approvals.",
+    "explorer": "https://bscscan.com/token/0xA60430237C826CBEd739E890D8a8AD3c6dEAD16a",
+    "type": "BEP20",
+    "symbol": "LUM",
+    "decimals": 18,
+    "status": "active",
+    "id": "0xA60430237C826CBEd739E890D8a8AD3c6dEAD16a",
+    "links": [
+        {
+            "name": "github",
+            "url": "https://github.com/Lumora-INGO/lumora-governance"
+        }
+    ],
+    "tags": [
+        "utility"
+    ]
+}
