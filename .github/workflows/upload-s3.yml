@@ -19,6 +19,9 @@ env:
 
 jobs:
   upload-s3:
+    # This repository is a fork. Never mint OIDC credentials or execute
+    # third-party publication steps outside the original trustwallet owner.
+    if: github.repository == 'trustwallet/assets'
     runs-on: ubuntu-latest
 
     steps:
@@ -31,16 +34,18 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Sync to S3
-        if: github.repository_owner == 'trustwallet'
+        if: github.repository == 'trustwallet/assets'
         shell: bash
-        run: |
-          SYNC_OPTIONS="--follow-symlinks --delete --exclude '*' --include 'dapps/*' --include 'blockchains/*'"
-          if [ "${{ github.event.inputs.use-size-only }}" == "true" ]; then
-            SYNC_OPTIONS="$SYNC_OPTIONS --size-only"
-          fi
-          eval "aws s3 sync . s3://$AWS_S3_BUCKET $SYNC_OPTIONS"
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          USE_SIZE_ONLY: ${{ github.event.inputs['use-size-only'] }}
+        run: |
+          set -euo pipefail
+          sync_options=(--follow-symlinks --delete --exclude '*' --include 'dapps/*' --include 'blockchains/*')
+          if [[ "$USE_SIZE_ONLY" == "true" ]]; then
+            sync_options+=(--size-only)
+          fi
+          aws s3 sync . "s3://$AWS_S3_BUCKET" "${sync_options[@]}"
 
       - name: Get changed files
         uses: jitterbit/get-changed-files@v1
@@ -48,10 +53,15 @@ jobs:
         id: files
 
       - name: Filter files to invalidate
-        run: |
-          echo "::set-output name=paths::$(echo ${{ steps.files.outputs.added_modified }} | tr ' ' '\n' | grep -E 'blockchains/|dapps/' | awk '{print "/"$1}' | tr '\n' ' ')"
         if: github.event_name == 'push'
         id: filter
+        env:
+          CHANGED_FILES: ${{ steps.files.outputs.added_modified }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          paths="$(printf '%s\n' "$CHANGED_FILES" | tr ' ' '\n' | grep -E 'blockchains/|dapps/' | awk '{print "/"$0}' | tr '\n' ' ' || true)"
+          echo "paths=$paths" >> "$GITHUB_OUTPUT"
 
       - name: Invalidate CloudFront
         if: github.repository_owner == 'trustwallet' && github.event_name == 'push' && steps.filter.outputs.paths != ''
