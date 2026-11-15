@@ -19,6 +19,9 @@ env:
 
 jobs:
   upload-s3:
+    # This repository is a fork. Never mint OIDC credentials or execute
+    # third-party publication steps outside the original trustwallet owner.
+    if: github.repository_owner == 'trustwallet'
     runs-on: ubuntu-latest
 
     steps:
