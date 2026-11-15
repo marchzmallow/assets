@@ -53,10 +53,15 @@ jobs:
         id: files
 
       - name: Filter files to invalidate
-        run: |
-          echo "::set-output name=paths::$(echo ${{ steps.files.outputs.added_modified }} | tr ' ' '\n' | grep -E 'blockchains/|dapps/' | awk '{print "/"$1}' | tr '\n' ' ')"
         if: github.event_name == 'push'
         id: filter
+        env:
+          CHANGED_FILES: ${{ steps.files.outputs.added_modified }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          paths="$(printf '%s\n' "$CHANGED_FILES" | tr ' ' '\n' | grep -E 'blockchains/|dapps/' | awk '{print "/"$0}' | tr '\n' ' ' || true)"
+          echo "paths=$paths" >> "$GITHUB_OUTPUT"
 
       - name: Invalidate CloudFront
         if: github.repository_owner == 'trustwallet' && github.event_name == 'push' && steps.filter.outputs.paths != ''
