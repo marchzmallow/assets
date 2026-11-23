@@ -9,17 +9,23 @@ on:
       - master
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: 1.18
-
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up Go
+        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        with:
+          go-version-file: go.mod
+
+      - name: Verify fork AWS OIDC policy (offline synthetic negatives)
+        run: node --test tests/security/upload-s3-fork-boundary.test.mjs
 
       - name: Run check
         run: make check
